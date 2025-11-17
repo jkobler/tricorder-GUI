@@ -1,0 +1,189 @@
+1	Metro ESP32 S3	Body	ON/OFF		CONTROL									Metro ESP32 S3:ON/OFF	1	Metro ESP32 S3:ON/OFF
+2	Metro ESP32 S3	Body	IO Ref	3.3V	POWER									Metro ESP32 S3:IO Ref		#N/A
+3	Metro ESP32 S3	Body	RST	RESET	CONTROL									Metro ESP32 S3:RST		#N/A
+4	Metro ESP32 S3	Body	3.3	3.3V	Power Out 3.3VDC									Metro ESP32 S3:3.3	219	Power Bus:3.3 VDC
+5	Metro ESP32 S3	Body	Vhi	VHIGH	Power Out ~5VDC									Metro ESP32 S3:Vhi	218	Power Bus:Vcc
+6	Metro ESP32 S3	Body	GND	GND	GROUND									Metro ESP32 S3:GND	222	Ground Bus:GND
+7	Metro ESP32 S3	Body	GND	GND	GROUND									Metro ESP32 S3:GND	223	Ground Bus:GND
+8	Metro ESP32 S3	Body	Vin	VIN	Power Out ~5VDC									Metro ESP32 S3:Vin		#N/A
+9	Metro ESP32 S3	Body	A0	A0	ANALOG	RTC	ADC2_CH3	GPIO14		T14	FSPIWP			Metro ESP32 S3:A0	76	VS1053 Audio BO:SDCS
+10	Metro ESP32 S3	Body	A1	A1	ANALOG	RTC	ADC2_CH4	GPIO15	U0RTS			XTAL_32K_P		Metro ESP32 S3:A1	67	VS1053 Audio BO:DREQ
+11	Metro ESP32 S3	Body	A2	A2	ANALOG	RTC	ADC2_CH5	GPIO16	U0CTS			XTAL_32K_N		Metro ESP32 S3:A2		#N/A
+12	Metro ESP32 S3	Body	A3	A3	ANALOG	RTC	ADC2_CH6	GPIO17	U1TXD					Metro ESP32 S3:A3		#N/A
+13	Metro ESP32 S3	Body	A4	A4	ANALOG	RTC	ADC2_CH7	GPIO18	U1RXD					Metro ESP32 S3:A4		#N/A
+14	Metro ESP32 S3	Body	A5	A5	ANALOG	RTC	ADC1_CH0	GPIO1		T1				Metro ESP32 S3:A5		#N/A
+15	Metro ESP32 S3	Body	QT Connector	 	I2C STEMMA QT	CPU					CLK_N_DIFF			Metro ESP32 S3:QT Connector	115	SGP30 Air Quality Sensor:QT Connector
+16	Metro ESP32 S3	Body	SCL	SCL	I2C Clock	CPU		GPIO48			CLK_N_DIFF			Metro ESP32 S3:SCL		#N/A
+17	Metro ESP32 S3	Body	SDA	SDA	I2C Data	CPU		GPIO47			CLK_P_DIFF			Metro ESP32 S3:SDA		#N/A
+18	Metro ESP32 S3	Body	AREF	3.3V	I2C POWER									Metro ESP32 S3:AREF		#N/A
+19	Metro ESP32 S3	Body	GND	GND	I2C GROUND									Metro ESP32 S3:GND		#N/A
+20	Metro ESP32 S3	Body	13	D13	DIGITAL GPIO	RTC	ADC2_CH2	GPIO13		T13	FSPIQ			Metro ESP32 S3:13	148	2 in TFT Display:SD CS
+21	Metro ESP32 S3	Body	12	D12	DIGITAL GPIO	RTC	ADC2_CH1	GPIO12		T12	FSPICLK			Metro ESP32 S3:12	149	2 in TFT Display:D/C
+22	Metro ESP32 S3	Body	11	D11	DIGITAL GPIO	RTC	ADC2_CH0	GPIO11		T11	FSPID			Metro ESP32 S3:11	151	2 in TFT Display:LCD CS
+23	Metro ESP32 S3	Body	10	D10	DIGITAL GPIO	RTC	ADC1_CH9	GPIO10		T10	FSPICS0			Metro ESP32 S3:10	75	VS1053 Audio BO:CS
+24	Metro ESP32 S3	Body	9	D9	DIGITAL GPIO	RTC	ADC1_CH8	GPIO9		T9	FSPIHD			Metro ESP32 S3:9	132	OV5640 Camera 72d AF:D9
+25	Metro ESP32 S3	Body	8	D8	DIGITAL GPIO	RTC	ADC1_CH7	GPIO8		T8				Metro ESP32 S3:8	131	OV5640 Camera 72d AF:D8
+26	Metro ESP32 S3	Body	7	D7	DIGITAL GPIO	RTC	ADC1_CH6	GPIO7		T7				Metro ESP32 S3:7	130	OV5640 Camera 72d AF:D7
+27	Metro ESP32 S3	Body	6	D6	DIGITAL GPIO	RTC	ADC1_CH5	GPIO6		T6				Metro ESP32 S3:6	129	OV5640 Camera 72d AF:D6
+28	Metro ESP32 S3	Body	5	D5	DIGITAL GPIO	RTC	ADC1_CH4	GPIO5		T5				Metro ESP32 S3:5	128	OV5640 Camera 72d AF:D5
+29	Metro ESP32 S3	Body	4	D4	DIGITAL GPIO	RTC	ADC1_CH3	GPIO4		T4				Metro ESP32 S3:4	127	OV5640 Camera 72d AF:D4
+30	Metro ESP32 S3	Body	3	D3	DIGITAL GPIO	RTC	ADC1_CH2	GPIO3		T3				Metro ESP32 S3:3	126	OV5640 Camera 72d AF:D3
+31	Metro ESP32 S3	Body	2	D2	DIGITAL GPIO	RTC	ADC1_CH1	GPIO2		T2				Metro ESP32 S3:2	125	OV5640 Camera 72d AF:D2
+32	Metro ESP32 S3	Body	RX	RX/D0	UART Receive/GPIO	CPU		GPIO41	MTDI					Metro ESP32 S3:RX		#N/A
+33	Metro ESP32 S3	Body	TX	TX/D1	UART Transmit/GPIO	CPU		GPIO40	MTDO					Metro ESP32 S3:TX		#N/A
+34	Metro ESP32 S3	Body	CHG	GND	GROUND									Metro ESP32 S3:CHG		#N/A
+35	Metro ESP32 S3	Body	CHG	VBAT	POWER									Metro ESP32 S3:CHG		#N/A
+36	Metro ESP32 S3	Body	NEO	NEOPIXEL	GPIO	CPU		GPIO46						Metro ESP32 S3:NEO		#N/A
+37	Metro ESP32 S3	Body	MISO	MISO	SPI MC In Serial Out 	RTC		GPIO21						Metro ESP32 S3:MISO	224	SPI Bus :MISO
+38	Metro ESP32 S3	Body	5V	VHIGH	POWER									Metro ESP32 S3:5V	226	SPI Bus :5V
+39	Metro ESP32 S3	Body	SCK	SCK	SPI CLOCK	CPU		GPIO39	MTCK					Metro ESP32 S3:SCK	227	SPI Bus :SCK
+40	Metro ESP32 S3	Body	MOSI	MOSI	SPI MC Out Serial In	CPU		GPIO42	MTMS					Metro ESP32 S3:MOSI	225	SPI Bus :MOSI
+41	Metro ESP32 S3	Body	RST	RESET	CONTROL									Metro ESP32 S3:RST		#N/A
+42	Metro ESP32 S3	Body	GND	GND	GROUND									Metro ESP32 S3:GND	228	SPI Bus :GND
+43	Metro ESP32 S3	Body	MicroSD	SD_CS	SD Select	CPU		GPIO45						Metro ESP32 S3:MicroSD		#N/A
+44	Metro ESP32 S3	Body	MicroSD	SCK	SPI CLOCK	CPU		GPIO39						Metro ESP32 S3:MicroSD		#N/A
+45	Metro ESP32 S3	Body	MicroSD	MOSI	SPI MC Out Serial In	CPU		GPIO42						Metro ESP32 S3:MicroSD		#N/A
+46	Metro ESP32 S3	Body	MicroSD	MISO	SPI MC In Serial Out 	RTC		GPIO21						Metro ESP32 S3:MicroSD		#N/A
+
+
+
+
+
+
+Start/Stop Button (Momentary): from Arduino #7 to GND
+
+
+
+
+209	LED 1	Hood	Anode		Indicator									LED 1:Anode	193	AW9523 GPIO Expander:0
+210	LED 1	Hood	Cathode		Indicator									LED 1:Cathode	234	SPI Bus :GND
+211	LED 2	Hood	Anode		Indicator									LED 2:Anode	195	AW9523 GPIO Expander:2
+212	LED 2	Hood	Cathode		Indicator									LED 2:Cathode	234	SPI Bus :GND
+213	LED 3	Hood	Anode		Indicator									LED 3:Anode	197	AW9523 GPIO Expander:4
+214	LED 3	Hood	Cathode		Indicator									LED 3:Cathode	234	SPI Bus :GND
+215	Button 1	Hood	1		Input									Button 1:1	194	AW9523 GPIO Expander:1
+216	Button 2	Hood	1		Input									Button 2:1	196	AW9523 GPIO Expander:3
+217	Button 3	Hood	1		Input									Button 3:1	198	AW9523 GPIO Expander:5
+218	Power Bus	Body	Vcc		Power Out ~5VDC									Power Bus:Vcc	5	Metro ESP32 S3:Vhi
+219	Power Bus	Body	3.3 VDC		Power Out 3.3VDC									Power Bus:3.3 VDC	4	Metro ESP32 S3:3.3
+220	Power Bus	Hood	Vcc		Power Out ~5VDC									Power Bus:Vcc	5	Metro ESP32 S3:Vhi
+221	Power Bus	Hood	3.3 VDC		Power Out 3.3VDC									Power Bus:3.3 VDC	4	Metro ESP32 S3:3.3
+222	Ground Bus	Body	GND		GROUND									Ground Bus:GND	7	Metro ESP32 S3:GND
+223	Ground Bus	Hood	GND		GROUND									Ground Bus:GND	7	Metro ESP32 S3:GND
+224	SPI Bus 	Body	MISO		SPI MC In Serial Out 									SPI Bus :MISO	37	Metro ESP32 S3:MISO
+225	SPI Bus 	Body	MOSI		SPI MC Out Serial In									SPI Bus :MOSI	40	Metro ESP32 S3:MOSI
+226	SPI Bus 	Body	5V		SPI 5VDC									SPI Bus :5V	38	Metro ESP32 S3:5V
+227	SPI Bus 	Body	SCK		SPI Clock 									SPI Bus :SCK	39	Metro ESP32 S3:SCK
+228	SPI Bus 	Body	GND		SPI Ground									SPI Bus :GND	42	Metro ESP32 S3:GND
+229	SPI Bus 	Body	RST		SPI Reset									SPI Bus :RST	42	Metro ESP32 S3:GND
+230	SPI Bus 	Hood	MISO		SPI MC In Serial Out 									SPI Bus :MISO	224	SPI Bus :MISO
+231	SPI Bus 	Hood	MOSI		SPI MC Out Serial In									SPI Bus :MOSI	225	SPI Bus :MOSI
+232	SPI Bus 	Hood	5V		SPI 5VDC									SPI Bus :5V	226	SPI Bus :5V
+233	SPI Bus 	Hood	SCK		SPI Clock 									SPI Bus :SCK	227	SPI Bus :SCK
+234	SPI Bus 	Hood	GND		SPI Ground									SPI Bus :GND	228	SPI Bus :GND
+235	SPI Bus 	Hood	RST		SPI Reset									SPI Bus :RST	228	SPI Bus :GND
+236	Button 1	Hood	2		Input									Button 1:2	234	SPI Bus :GND
+237	Button 2	Hood	2		Input									Button 2:2	196	AW9523 GPIO Expander:3
+238	Button 3	Hood	2		Input									Button 3:2	198	AW9523 GPIO Expander:5
+
+
+
+
+
+125	OV5640 Camera 72d AF	Body	D2		Data 									OV5640 Camera 72d AF:D2	31	Metro ESP32 S3:2	Body
+126	OV5640 Camera 72d AF	Body	D3		Data 									OV5640 Camera 72d AF:D3	30	Metro ESP32 S3:3	Body
+127	OV5640 Camera 72d AF	Body	D4		Data 									OV5640 Camera 72d AF:D4	29	Metro ESP32 S3:4	Body
+128	OV5640 Camera 72d AF	Body	D5		Data 									OV5640 Camera 72d AF:D5	28	Metro ESP32 S3:5	Body
+129	OV5640 Camera 72d AF	Body	D6		Data 									OV5640 Camera 72d AF:D6	27	Metro ESP32 S3:6	Body
+130	OV5640 Camera 72d AF	Body	D7		Data 									OV5640 Camera 72d AF:D7	26	Metro ESP32 S3:7	Body
+131	OV5640 Camera 72d AF	Body	D8		Data 									OV5640 Camera 72d AF:D8	25	Metro ESP32 S3:8	Body
+132	OV5640 Camera 72d AF	Body	D9		Data 									OV5640 Camera 72d AF:D9	24	Metro ESP32 S3:9	Body
+
+
+
+Into the Hood...  11 + 4 = 15
+
+TFT :
+SPI Bus - 6 lines  including MOSI, MISO, CLK, GND, RST, 5V 
+LCD CS 
+D/C
+SD CS
+3.3 VDC Bus 
+
+Microphone:
+Microphone Out 
+
+I2C Bus - QT Connector with 4 lines including SCL, SDA, AREF, GND
+
+12mm 12 wire slip ring
+AND 1 single lines
+
+
+Adafruit ESP32-S3 Feather with 4MB Flash 2MB PSRAM - STEMMA QT / Qwiic
+
+
+239	ESP32-S3 Feather Display Proc	Hood	RST	RESET	CONTROL									ESP32-S3 Feather Display Proc:RST
+240	ESP32-S3 Feather Display Proc	Hood	3V	3.3V	Power Out 3.3VDC									ESP32-S3 Feather Display Proc:3V
+241	ESP32-S3 Feather Display Proc	Hood	3V	3.3V	Power Out 3.3VDC									ESP32-S3 Feather Display Proc:3V
+242	ESP32-S3 Feather Display Proc	Hood	GND	GND	GROUND									ESP32-S3 Feather Display Proc:GND
+243	ESP32-S3 Feather Display Proc	Hood	A0	A0	ANALOG	RTC	ADC2_CH7	GPIO18	U1RXD					ESP32-S3 Feather Display Proc:A0
+244	ESP32-S3 Feather Display Proc	Hood	A1	A1	ANALOG	RTC	ADC2_CH6	GPIO17	U1TXD					ESP32-S3 Feather Display Proc:A1
+245	ESP32-S3 Feather Display Proc	Hood	A2	A2	ANALOG	RTC	ADC2_CH5	GPIO16	U0CTS			XTAL_32K_N		ESP32-S3 Feather Display Proc:A2
+246	ESP32-S3 Feather Display Proc	Hood	A3	A3	ANALOG	RTC	ADC2_CH4	GPIO15	U0RTS			XTAL_32K_P		ESP32-S3 Feather Display Proc:A3
+247	ESP32-S3 Feather Display Proc	Hood	A4	A4	ANALOG	RTC	ADC2_CH3	GPIO14		T14	FSPIWP			ESP32-S3 Feather Display Proc:A4
+248	ESP32-S3 Feather Display Proc	Hood	A5	A5	ANALOG	RTC	ADC1_CH7	GPIO8		T8				ESP32-S3 Feather Display Proc:A5
+249	ESP32-S3 Feather Display Proc	Hood	SCL	SCK	SPI Clock	SPI/CPU		GPIO36			FSPICLK			ESP32-S3 Feather Display Proc:SCL
+250	ESP32-S3 Feather Display Proc	Hood	MO	MOSI	SPI MC Out Serial In	SPI/CPU		GPIO35			FSPID			ESP32-S3 Feather Display Proc:MO
+251	ESP32-S3 Feather Display Proc	Hood	MI	MISO	SPI MC In Serial Out 	SPI/CPU		GPIO37			FSPIQ			ESP32-S3 Feather Display Proc:MI
+252	ESP32-S3 Feather Display Proc	Hood	RX	RX	UART Receive/GPIO	CPU		GPIO38			FSPIWP			ESP32-S3 Feather Display Proc:RX
+253	ESP32-S3 Feather Display Proc	Hood	TX	TX	UART Transmit/GPIO	CPU		GPIO39	MTCK					ESP32-S3 Feather Display Proc:TX
+254	ESP32-S3 Feather Display Proc	Hood	DB	TXD0										ESP32-S3 Feather Display Proc:DB
+255	ESP32-S3 Feather Display Proc	Hood	BUTTON			RTC		GPIO0						ESP32-S3 Feather Display Proc:BUTTON
+256	ESP32-S3 Feather Display Proc	Hood	QT Connector	 	I2C STEMMA QT									ESP32-S3 Feather Display Proc:QT Connector
+257	ESP32-S3 Feather Display Proc	Hood	LiPoly connector/charger		POWER								0x36	ESP32-S3 Feather Display Proc:LiPoly connector/charger
+258	ESP32-S3 Feather Display Proc	Hood	VBAT		POWER									ESP32-S3 Feather Display Proc:VBAT
+259	ESP32-S3 Feather Display Proc	Hood	EN											ESP32-S3 Feather Display Proc:EN
+260	ESP32-S3 Feather Display Proc	Hood	VBUS											ESP32-S3 Feather Display Proc:VBUS
+261	ESP32-S3 Feather Display Proc	Hood	13	D13	DIGITAL GPIO	RTC	ADC2_CH2	GPIO13		T13	FSPIQ			ESP32-S3 Feather Display Proc:13
+262	ESP32-S3 Feather Display Proc	Hood	12	D12	DIGITAL GPIO	RTC	ADC2_CH1	GPIO12		T12	FSPICLK			ESP32-S3 Feather Display Proc:12
+263	ESP32-S3 Feather Display Proc	Hood	11	D11	DIGITAL GPIO	RTC	ADC2_CH0	GPIO11		T11	FSPID			ESP32-S3 Feather Display Proc:11
+264	ESP32-S3 Feather Display Proc	Hood	10	D10	DIGITAL GPIO	RTC	ADC1_CH9	GPIO10		T10	FSPICS0			ESP32-S3 Feather Display Proc:10
+265	ESP32-S3 Feather Display Proc	Hood	9	D9	DIGITAL GPIO	RTC	ADC1_CH8	GPIO9		T9	FSPIHD			ESP32-S3 Feather Display Proc:9
+266	ESP32-S3 Feather Display Proc	Hood	6	D6	DIGITAL GPIO	RTC	ADC1_CH5	GPIO6		T6				ESP32-S3 Feather Display Proc:6
+267	ESP32-S3 Feather Display Proc	Hood	5	D5	DIGITAL GPIO	RTC	ADC1_CH4	GPIO5		T5				ESP32-S3 Feather Display Proc:5
+268	ESP32-S3 Feather Display Proc	Hood	SCL	SCL	I2C Clock	RTC	ADC1_CH3	GPIO4		T4				ESP32-S3 Feather Display Proc:SCL
+269	ESP32-S3 Feather Display Proc	Hood	SDA	SDA	I2C Data	RTC	ADC1_CH2	GPIO3		T3				ESP32-S3 Feather Display Proc:SDA
+270	ESP32-S3 Feather Display Proc	Hood	NEO	NEOPIXEL_POWER		RTC		GPIO21						ESP32-S3 Feather Display Proc:NEO
+
+This is the Debug TX (DB) pin. This is the hardware UART debug pin. You can connect this to a USB console cable in order to read the debug output from the ESP32 IDF (http://adafru.it/954). This is useful if you are writing software and need to see the low level debug output.
+
+
+46.fDiidggiekt
+
+This JST SH 4-pin STEMMA QT (https://adafru.it/Ft4) connector breaks out I2C (SCL, SDA, 3.3V, GND). It allows you to connect to various breakouts and sensors with STEMMA QT connectors (https://adafru.it/Qgf) or to other things using assorted associated accessories (https://adafru.it/Ft6). It works great with any STEMMA QT or Qwiic sensor/device. You can also use it with Grove I2C devices thanks to this handy cable (http://adafru.it/4528). There is a power pin that must be pulled high for the STEMMA QT connector to work. This is done automatically in CircuitPython and Arduino. The pin is available in CircuitPython as I2C_POWER and in Arduino as TFT_I2C_POWER . You can manually cut power to the QT port completely by setting GPIO 7 to an output and LOW. This will disable power to the pullup resistors and connector, for low power usage. If you run into I2C or TFT power issues on Arduino, ensure you are using the latest Espressif board support package. If you are still having issues, you may need to manually pull the pin high in your code. ©
+
+This is the positive voltage to/from the 2-pin JST jack for the optional Lipoly battery.
+
+147	2 in TFT Display	Hood	BACKLIGHT		Backlight control									2 in TFT Display:BACKLIGHT		#N/A	#N/A
+148	2 in TFT Display	Hood	SD CS		SD card chip select									2 in TFT Display:SD CS	261	ESP32-S3 Feather Display Proc:13	Hood
+149	2 in TFT Display	Hood	D/C		TFT SPI Data/CMD Select									2 in TFT Display:D/C	262	ESP32-S3 Feather Display Proc:12	Hood
+150	2 in TFT Display	Hood	RESET		RESET									2 in TFT Display:RESET	239	ESP32-S3 Feather Display Proc:RST	Hood
+151	2 in TFT Display	Hood	LCD CS		TFT SPI Chip Select									2 in TFT Display:LCD CS	263	ESP32-S3 Feather Display Proc:11	Hood
+152	2 in TFT Display	Hood	MOSI		SPI MC Out Serial In									2 in TFT Display:MOSI	250	ESP32-S3 Feather Display Proc:MO	Hood
+153	2 in TFT Display	Hood	MISO		SPI MC In Serial Out 									2 in TFT Display:MISO	251	ESP32-S3 Feather Display Proc:MI	Hood
+154	2 in TFT Display	Hood	SCK		SPI CLOCK									2 in TFT Display:SCK	268	ESP32-S3 Feather Display Proc:SCL	Hood
+155	2 in TFT Display	Hood	GND		GROUND									2 in TFT Display:GND	242	ESP32-S3 Feather Display Proc:GND	Hood
+156	2 in TFT Display	Hood	3.3V		POWER									2 in TFT Display:3.3V	240	ESP32-S3 Feather Display Proc:3V	Hood
+157	2 in TFT Display	Hood	Vin		POWER									2 in TFT Display:Vin	260	ESP32-S3 Feather Display Proc:VBUS	Hood
+
+
+Feather 3.3V to breakout Vin (red wire)
+Feather 3.3V to breakout Lite (yellow wire)	This is the PWM input for the backlight control. It is by default pulled high (backlight on), however, you can PWM at any frequency or pull down to turn the backlight off.
+Feather GND to breakout Gnd (black wire)
+Feather SCK to breakout SCK (grey wire)	This is the SPI clock input pin.
+Feather MO to breakout MOSI (blue wire)	This is the SPI MOSI (Microcontroller Out / Serial In) pin. It is used to send data from the microcontroller to the SD card and/or display.
+Feather MI to breakout MISO (green wire)	This is the SPI MISO (Microcontroller In / Serial Out) pin. It's used for the SD card. It isn't used for the display because it's write-only. It is 3.3V logic out (but can be read by 5V logic).
+Feather D10 to breakout SDCS (pink wire)	This is the SD card chip select pin. This pin is required for communicating with the onboard SD card holder. You can leave this disconnected if you aren't going to access SD cards.
+Feather D9 to breakout RST (cyan wire)	This is the display reset pin. Connecting to ground resets the display! It's best to have this pin controlled by the library so the display is reset cleanly, but you can also connect it to the microcontroller's Reset pin, which works for most cases. Often, there is an automatic-reset chip on the display which will reset it on power-up, making this connection unnecessary in that case.
+Feather D6 to breakout DC (orange wire)	This is the display SPI data/command selector pin.
+Feather D5 to breakout TCS (white wire) 	This is the TFT SPI chip select pin.
