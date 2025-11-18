@@ -44,7 +44,7 @@ I have stubs for some of the features. I did get a basic image veiwer working as
 As of right now I plan on sticking with ESP32 processors as they seem to have the speed and memory to handle everything without issue. I currently have an [Adafruit Metro ESP32-S2](https://www.adafruit.com/product/2488) as the processor now, which is running the screen and the blinky lights™. I plan on using a smaller [Adafruit ESP32-S2 Feather](https://www.adafruit.com/product/5000) for the [Adafruit 2.2" ILI9341 based TFT](https://www.adafruit.com/product/1480), the blinky lights™ of course, and the buttons. All of these should fit up in the hood along with the screen, and require only power and I2C connections routed from the body. There will also probably be a microphone in the hood but I would prefer it be connected to the body processor which will most likely be the Adafruit Metro ESP32-S2 I already have in play. 
 
 
-###Current Punchdown List
+### Current Punchdown List
 
 | Auxilliary Device | Pin On Aux | MCU            | Pin On MCU | Wire Color |
 | :---              | :---       | :---           | :---       | :---       |
