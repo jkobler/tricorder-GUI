@@ -3,7 +3,8 @@
 #define DEBUG
 //#define HAS_RTC
 //#define USE_SD_CARD
-//#define ESP32
+//#define METRO_ESP32_S2
+#define FEATHER_ESP32_S2
 #define USE_BITMAP_ARRAY
 //#define USE_PROGMEM_FOR_BITMAP_ARRAY
 
