@@ -73,3 +73,34 @@ As of right now I plan on sticking with ESP32 processors as they seem to have th
 | BlinkyLight3      | Anode      | Metro ESP32-S2 | D15        | brown      | 
 | BlinkyLight3      | Cathode    | Metro ESP32-S2 | GND        | 10kΩ       |  
 |                   |            |                |            |  
+
+
+
+### Display Punchdown List
+| Auxilliary Device | Pin On Aux | MCU            | Pin On MCU | Wire Color |
+| :---              | :---       | :---           | :---       | :---       |
+| 2.2" TFT          | GND        | Metro ESP32-S2 | GND        | black      |
+| 2.2" TFT          | VIN        | Metro ESP32-S2 | 3.3        | brown      |
+| 2.2" TFT          | D/C        | Metro ESP32-S2 | D9         | red        |
+| 2.2" TFT          | RST        | Metro ESP32-S2 | RST        | orange     |
+| 2.2" TFT          | SDCS       | Metro ESP32-S2 | D12        | yellow     |
+| 2.2" TFT          | CS         | Metro ESP32-S2 | D10        | green      |
+| 2.2" TFT          | MOSI       | Metro ESP32-S2 | MOSI       | blue       |
+| 2.2" TFT          | MISO       | Metro ESP32-S2 | MISO       | purple     |
+| 2.2" TFT          | SCK        | Metro ESP32-S2 | SCK        | gray       |
+| 2.2" TFT          | BL         | Metro ESP32-S2 | XXXXXXXXXX | white      |
+
+### Switch Array Punchdown List
+| Auxilliary Device | Pin On Aux | MCU            | Pin On MCU | Wire Color |
+| :---              | :---       | :---           | :---       | :---       |
+| SWITCH1           |            | Metro ESP32-S2 | D7         | purple     |
+| SWITCH2           |            | Metro ESP32-S2 | D8         | green      |
+| GND               |            | Metro ESP32-S2 | GND        | blue       |
+
+### Blinky Lights™ Array Punchdown List
+| Auxilliary Device | Pin On Aux | MCU            | Pin On MCU | Wire Color |
+| :---              | :---       | :---           | :---       | :---       |
+| LED1              |            | Metro ESP32-S2 | D13        | purple     |
+| LED2              |            | Metro ESP32-S2 | D14        | green      |
+| LED3              |            | Metro ESP32-S2 | D15        | blue       |
+| GND               |            | Metro ESP32-S2 | GND        | black      |
