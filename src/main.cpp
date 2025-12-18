@@ -3,16 +3,25 @@
 #define DEBUG
 //#define HAS_RTC
 //#define USE_SD_CARD
-//#define ESP32
+#define METRO_ESP32_S2
+//#define FEATHER_ESP32_S2
 #define USE_BITMAP_ARRAY
 //#define USE_PROGMEM_FOR_BITMAP_ARRAY
-
+#define USE_I2C
+#define USE_ILI9341
+//#define USE_ST7789
 
 #include <cstring>
 #include <string.h>
 #include "SPI.h"
 #include "Adafruit_GFX.h"
-#include "Adafruit_ILI9341.h"
+#ifdef USE_ILI9341
+  #include "Adafruit_ILI9341.h"
+#endif
+
+#ifdef USE_ST7789
+  #include "Adafruit_ST7789.h"
+#endif
 
 #ifdef USE_SD_CARD
   #include "SdFat.h"
@@ -181,10 +190,10 @@ byte menuGroupCount = 5; //because sizeof is problematic
 int screenWidth;
 int screenHeight;
 
-byte switch1 = 7; //purple
-byte switch2 = 8; //yellow
-byte switch3 = 6; //orange
-byte switch4 = 5; //blue
+byte switch1 = 7; 
+byte switch2 = 8; 
+//byte encoder_ = 6; //orange
+//byte switch4 = 5; //blue
 byte leds[3] = {13,14,15};
 
 
@@ -203,8 +212,8 @@ void setup() {
 
   pinMode(switch1,INPUT_PULLUP);
   pinMode(switch2,INPUT_PULLUP);
-  pinMode(switch3,INPUT_PULLUP);
-  pinMode(switch4,INPUT_PULLUP);
+  //pinMode(switch3,INPUT_PULLUP);
+  //pinMode(switch4,INPUT_PULLUP);
   //pinMode(rotaryDt,INPUT);
   //pinMode(rotaryClk,INPUT_PULLUP);
   pinMode(leds[0],OUTPUT);
@@ -314,8 +323,8 @@ void setup() {
 #endif
 
   delay(2000);
-  attachInterrupt(switch3, handleSwitch3, FALLING);
-  attachInterrupt(switch4, handleSwitch4, FALLING);
+  // attachInterrupt(switch3, handleSwitch3, FALLING);
+  // attachInterrupt(switch4, handleSwitch4, FALLING);
   attachInterrupt(switch1, handleSwitch1, FALLING);
   attachInterrupt(switch2, handleSwitch2, FALLING);
 
@@ -429,12 +438,12 @@ void loop() {
 void handleRotaryEncoder() {
     rotations++;
 }
-void handleSwitch3() {
-    rotations++;
-}
-void handleSwitch4() {
-    rotations--;
-}
+// void handleSwitch3() {
+//     rotations++;
+// }
+// void handleSwitch4() {
+//     rotations--;
+// }
 
 void handleSwitch1() {
   switch1State = true;
