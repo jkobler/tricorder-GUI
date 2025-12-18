@@ -8,10 +8,10 @@
 - [X] Make Stardate Calculator
 - [ ] Connect Working RTC
 - [X] Button 1 and Button 2 do things like back and forward
-- [ ] Get I2C bus functioning
+- [X] Get I2C bus functioning
 - [ ] Connect hood MCU to body MCU
-- [ ] Get Navigation Encoder Connected and Working
-	- [ ] ..Solder Encoder to Breakout Board
+- [X] Get Navigation Encoder Connected and Working
+	- [X] ..Solder Encoder to Breakout Board
 - [ ] Move components from breadboard to functional connects
 - [ ] Solder switchs and Blink Lights™ to perf board then to hood MCU GPIO pins, or GPIO extender
 - [ ] Solder TFT to hood MCU SPI pins
@@ -34,7 +34,60 @@
 - [ ] Initiate scope creep.
 
 
+
+## 2025-12-17
+
+Had to take break to print parts, order parts, and work on other projects, but I was able to hook up the blinky lights™ on a [Adafruit GPIO Extender](https://www.adafruit.com/product/4886) and the encoder with an [Adafruit Rotary Encoder Breakout](https://www.adafruit.com/product/4991) to the [Adafruit ESP32-S2 Feather](https://www.adafruit.com/product/5000). That works so much nicer. The lights can fade in and out which is classy af.
+
+I also picked up a couple of [2.0" 320x240 TFT Displays](https://www.adafruit.com/product/4311) from Digikey which will provide better fitment. The goal is to get one working with the ESP32-S2 Feather along with everything else so the buttons and encoder can interact with the menu system. I am going to ditch the EYESPI board. It's great for debugging and prototyping but room is a factor and the ribbon cable doesn't fit so I will have to direct solder, maybe with a different connector between for easy replacement. Adafruit has them back in stock so I'll probably order more. 
+
+I'm going to have to change to the buttons inputting to and the LEDs fed from the MCU directly. There just isn't going to be room in the hood for the GPIO Extender, not to mention it really didn't spare me any hassle as I still had to solder. I intend on using pulse width modulation to get the same fade in and out effect though. 
+
+For switches I found these awesome badboys on DigiKey, [Pushbutton Switch SPST-NO](https://www.digikey.com/en/products/detail/e-switch/800AWSP9M2QE/502069). Not tactile but they fit well. I re-make the train wheel buttons to fit over these. I'll probably pull them down to ground with 10KΩ resisters. 
+
+
+
+
+### Punchdown List (expected)
+
+| Auxilliary Device | Pin On Aux | MCU              | Pin On MCU | Pull Up/Down  | Wire Color |
+| :---              | :---       | :---             | :---       | :---          | :---       |
+| 2.0" TFT          | Vin        | ESP32-S2 Feather | 3.3        |               |            |
+| 2.0" TFT          | 3Vo        |                  |            |               |            |
+| 2.0" TFT          | Gnd        | ESP32-S2 Feather | GND        |               |            |
+| 2.0" TFT          | SCK        | ESP32-S2 Feather | SCK        |               |            |
+| 2.0" TFT          | MISO       | ESP32-S2 Feather | MI         |               |            |
+| 2.0" TFT          | MOSI       | ESP32-S2 Feather | MO         |               |            |
+| 2.0" TFT          | CS         | ESP32-S2 Feather | D13        |               |            |
+| 2.0" TFT          | RST        | ESP32-S2 Feather | D12        |               |            |
+| 2.0" TFT          | D/C        | ESP32-S2 Feather | D11        |               |            |
+| 2.0" TFT          | SDSC       | ESP32-S2 Feather | D10        |               |            |
+| 2.0" TFT          | BL         | ESP32-S2 Feather |            |               |            |
+| SWITCH1           | 1          | ESP32-S2 Feather | D09        | 10kΩ to GND   |            |
+| SWITCH1           | 2          | ESP32-S2 Feather | 3.3V       |               |            |
+| SWITCH2           | 1          | ESP32-S2 Feather | D06        | 10kΩ to GND   |            |
+| SWITCH2           | 2          | ESP32-S2 Feather | 3.3V       |               |            |
+| SWITCH3           | 1          | ESP32-S2 Feather | D05        | 10kΩ to GND   |            |
+| SWITCH3           | 2          | ESP32-S2 Feather | 3.3V       |               |            |
+| BlinkyLight1      | Anode      | ESP32-S2 Feather | A05        |               |            | 
+| BlinkyLight1      | Cathode    | ESP32-S2 Feather | GND        | 10kΩ to GND   |            |  
+| BlinkyLight2      | Anode      | ESP32-S2 Feather | A04        |               |            | 
+| BlinkyLight2      | Cathode    | ESP32-S2 Feather | GND        | 10kΩ to GND   |            |  
+| BlinkyLight3      | Anode      | ESP32-S2 Feather | A03        |               |            | 
+| BlinkyLight3      | Cathode    | ESP32-S2 Feather | GND        | 10kΩ to GND   |            |  
+
+
+
+#### I2C Bus
+
+| Auxilliary Device | Address    | MCU              | Constant Name | 
+| :---              | :---       | :---             | :---          | 
+| Encoder Breakout  | 0x36       | ESP32-S2 Feather | SEESAW_ADDR   | 
+
+
+
 ## 2025-11-16
+
 It all started when I started 3D printing a [Tricorder](https://cults3d.com/en/3d-model/various/tos-tricorder-with-empty-compartment) model and then thought to myself, "Hey, I should put a little screen along with an MCU and then make it do tricorder stuff." It kind of went from there. 
 
 So far, I have a working first go at a GUI, which I had to take liberties with as there were very few times we ever saw the little screen on the hero models. I tried to keep a look and feel that I thought might be privelent in the mid-23rd century, and not go full LCARS with it. Personally, I don't like LCARS but that's me. I went with something a bit more minimalistic and easy to read on the small 320x240 sceen. Long, indented losenges.
@@ -43,8 +96,7 @@ I have stubs for some of the features. I did get a basic image veiwer working as
 
 As of right now I plan on sticking with ESP32 processors as they seem to have the speed and memory to handle everything without issue. I currently have an [Adafruit Metro ESP32-S2](https://www.adafruit.com/product/2488) as the processor now, which is running the screen and the blinky lights™. I plan on using a smaller [Adafruit ESP32-S2 Feather](https://www.adafruit.com/product/5000) for the [Adafruit 2.2" ILI9341 based TFT](https://www.adafruit.com/product/1480), the blinky lights™ of course, and the buttons. All of these should fit up in the hood along with the screen, and require only power and I2C connections routed from the body. There will also probably be a microphone in the hood but I would prefer it be connected to the body processor which will most likely be the Adafruit Metro ESP32-S2 I already have in play. 
 
-
-### Current Punchdown List
+### Punchdown List
 
 | Auxilliary Device | Pin On Aux | MCU            | Pin On MCU | Wire Color |
 | :---              | :---       | :---           | :---       | :---       |
@@ -76,7 +128,8 @@ As of right now I plan on sticking with ESP32 processors as they seem to have th
 
 
 
-### Display Punchdown List
+#### Display Punchdown List
+
 | Auxilliary Device | Pin On Aux | MCU            | Pin On MCU | Wire Color |
 | :---              | :---       | :---           | :---       | :---       |
 | 2.2" TFT          | GND        | Metro ESP32-S2 | GND        | black      |
@@ -90,17 +143,22 @@ As of right now I plan on sticking with ESP32 processors as they seem to have th
 | 2.2" TFT          | SCK        | Metro ESP32-S2 | SCK        | gray       |
 | 2.2" TFT          | BL         | Metro ESP32-S2 | XXXXXXXXXX | white      |
 
-### Switch Array Punchdown List
+
+#### Switch Array Punchdown List
+
 | Auxilliary Device | Pin On Aux | MCU            | Pin On MCU | Wire Color |
 | :---              | :---       | :---           | :---       | :---       |
 | SWITCH1           |            | Metro ESP32-S2 | D7         | purple     |
 | SWITCH2           |            | Metro ESP32-S2 | D8         | green      |
 | GND               |            | Metro ESP32-S2 | GND        | blue       |
 
-### Blinky Lights™ Array Punchdown List
+
+#### Blinky Lights™ Array Punchdown List
+
 | Auxilliary Device | Pin On Aux | MCU            | Pin On MCU | Wire Color |
 | :---              | :---       | :---           | :---       | :---       |
 | LED1              |            | Metro ESP32-S2 | D13        | purple     |
 | LED2              |            | Metro ESP32-S2 | D14        | green      |
 | LED3              |            | Metro ESP32-S2 | D15        | blue       |
 | GND               |            | Metro ESP32-S2 | GND        | black      |
+
