@@ -116,13 +116,23 @@ As of right now I plan on sticking with ESP32 processors as they seem to have th
 
 Had to take break to print parts, order parts, and work on other projects, but I was able to hook up the blinky lights™ on a [Adafruit GPIO Extender](https://www.adafruit.com/product/4886) and the encoder with an [Adafruit Rotary Encoder Breakout](https://www.adafruit.com/product/4991) to the [Adafruit ESP32-S2 Feather](https://www.adafruit.com/product/5000). That works so much nicer. The lights can fade in and out which is classy af.
 
-I also picked up a couple of [2.0" 320x240 TFT Displays](https://www.adafruit.com/product/4311) from Digikey which will provide better fitment. The goal is to get one working with the ESP32-S2 Feather along with everything else so the buttons and encoder can interact with the menu system. I am going to ditch the EYESPI board. It's great for debugging and prototyping but room is a factor and the ribbon cable doesn't fit so I will have to direct solder, maybe with a different connector between for easy replacement. Adafruit has them back in stock so I'll probably order more. 
+I almost forgot to mention I bought I new 3D-printer which is what brought me back into this full berries. My Creality Ender 3 S1 Plus has unfortunately ended up with a warped hot bed, I imagine because it is rather wide and long, but also perhaps because I didn't let it cool slower. Just theories, but I can't find a replacement hotbed for it, and since we have the laser cutter attachment which isn't so sensitive to tram and level issues, it will be for laser cutting from here on out. I replaced it with an Anycubic Kobra S1 combo kit with the ACE filament box which allows me to do multicolor. So far it has been wonderful. I mean, I was printing right out of the box which I couldn't do with the Creality.
 
-I'm going to have to change to the buttons inputting to and the LEDs fed from the MCU directly. There just isn't going to be room in the hood for the GPIO Extender, not to mention it really didn't spare me any hassle as I still had to solder. I intend on using pulse width modulation to get the same fade in and out effect though. 
+While the Ender 3 was I struggle sometimes, I don't regret getting it. I learned a lot, and when it worked, it worked well. For the price point, it worked well. I will still be able to use it as mentioned, for laser cutting. I would still be using it if Creality hadn't abandon making replacement parts for it a year after I bought it, but such are things with bleeding edge technology I guess.
 
-For switches I found these awesome badboys on DigiKey, [Pushbutton Switch SPST-NO](https://www.digikey.com/en/products/detail/e-switch/800AWSP9M2QE/502069). Not tactile but they fit well. I re-make the train wheel buttons to fit over these. I'll probably pull them down to ground with 10KΩ resisters. 
+Nonetheless, I can now print my tricorder parts after making changes necessary for fitting the parts.
 
+Ok, back to the Tricorder.
 
+I also picked up a couple of [Adafruit 2.0" 320x240 TFT Displays](https://www.adafruit.com/product/4311) from Digikey which will provide better fitment. The goal is to get one working with the ESP32-S2 Feather along with everything else so the buttons and encoder can interact with the menu system. I am going to ditch the EYESPI board. It's great for debugging and prototyping but room is a factor and the ribbon cable doesn't fit so I will have to direct solder, maybe with a different connector between for easy replacement. Adafruit has more of the 2.0" TFTs back in stock so I'll probably order more from there. It's nice to have spares, not to mention like all projects this is merely the prototype. Actually, the next 5 will mostly be prototypes too if I'm being honest here.
+
+I printed a handy test stand for my hood parts (STL is included in this repo) that will assist me in prototype and development.
+
+I'm going to have to change to the buttons inputting to and the LEDs fed from the MCU directly. There just isn't going to be room in the hood for the GPIO Extender, not to mention it really didn't spare me any hassle as I still had to solder. I intend on using pulse width modulation to get the same fade in and out effect though.
+
+For switches I found these awesome badboys on DigiKey, [Pushbutton Switch SPST-NO](https://www.digikey.com/en/products/detail/e-switch/800AWSP9M2QE/502069). Not tactile but they fit well. I re-make the train wheel buttons to fit over these. I'll probably pull them down to ground with 10KΩ resisters.
+
+At this point I need to decide how I want to connect the blinky lights™, switches, and TFT to the MCU, and find connectors that will work for this setup.  
 
 
 ### Punchdown List (expected)
