@@ -3,20 +3,25 @@
 #define DEBUG
 //#define HAS_RTC
 //#define USE_SD_CARD
-#define METRO_ESP32_S2
-//#define FEATHER_ESP32_S2
+//#define METRO_ESP32_S2
+#define FEATHER_ESP32_S2
 #define USE_BITMAP_ARRAY
 //#define USE_PROGMEM_FOR_BITMAP_ARRAY
 #define USE_I2C
-#define USE_ILI9341
-//#define USE_ST7789
+//#define USE_ILI9341
+#define USE_ST7789
 
 #include <cstring>
 #include <string.h>
 #include "SPI.h"
 #include "Adafruit_GFX.h"
+
 #ifdef USE_ILI9341
   #include "Adafruit_ILI9341.h"
+#endif
+
+#ifdef USE_I2C
+  #include "Adafruit_seesaw.h"
 #endif
 
 #ifdef USE_ST7789
@@ -37,6 +42,7 @@
 #include "Fonts/FreeSerif9pt7b.h"
 #include "Fonts/FreeSerifItalic9pt7b.h"
 #include "pgmspace.h"
+#include "chartingSystem.h"
 
 #ifdef USE_BITMAP_ARRAY
   #include "bitmap_arrays_SFlogo.h"
@@ -51,13 +57,21 @@
 #define BLUE 0x001F
 #define RED 0xF800
 #define GREEN 0x07E0
+#define DARKGREEN 0x03E0
 #define CYAN 0x07FF
 #define MAGENTA 0xF81F
 #define YELLOW 0xFFE0
 #define WHITE 0xFFFF
 
 #define GRAY 0xBBBB
+#define LIGHTGREY 0xC618
+#define DARKCYAN 0x03EF
+#define GREENYELLOW 0xAFE5
+#define PINK 0xFC18
 
+#ifdef USE_I2C
+  #define SEESAW_ADDR 0x36
+#endif
 /*
 COLORS:
   16 bit values 
@@ -106,23 +120,21 @@ FreeSerif9pt7b       5..17     22
 #define TOS_BLUE 0x1B18
 #define TOS_SLATEBLUE 0x1B94
 
-#define PINK 0b1111111100011000
-
-#define TFT_DC 9
+#define TFT_DC 12
 #define TFT_CS 10
-#define SD_CS 12
-//#define SD_RST 12
+#define TFT_BL A2
+
+#define SD_CS 13
+#define TFT_RST 11
 
 void loop();
 void drawMenuItem(int, int, int, int, byte);
 void drawMenu();
-void handleRotaryEncoder();
 void handleSwitch1();
 void handleSwitch2();
 void handleSwitch3();
-void handleSwitch4();
-void constantLights(byte,byte);
-void blinkyLights(byte, int);
+void constantLights(int8_t,byte);
+void blinkyLights(int8_t, uint16_t);
 void drawLogoBitmap();
 void drawLogoBitmap(uint32_t delayTime);
 void openAudioScreen();
@@ -130,6 +142,9 @@ void openVideoScreen();
 void printCenterJustifiedText(const char*, u_int16_t, bool, uint16_t, uint16_t);
 void printPaginatedText(const char*,uint16_t,uint16_t);
 void openReaderScreen();
+void fadeInLights(int8_t, uint8_t, uint16_t);
+void fadeOutLights(int8_t, uint8_t, uint16_t);
+void openBarChartTest();
 
 #ifdef HAS_RTC
   void drawHeader(RTCTime);
@@ -143,8 +158,17 @@ void openReaderScreen();
   Adafruit_ImageReader reader(SD); // Image-reader object, pass in SD filesys
 #endif
 
-Adafruit_ILI9341 tft = Adafruit_ILI9341(TFT_CS, TFT_DC);
+#ifdef USE_ILI9341
+ Adafruit_ILI9341 tft = Adafruit_ILI9341(TFT_CS, TFT_DC);
+#endif
 
+#ifdef USE_ST7789
+  Adafruit_ST7789 tft = Adafruit_ST7789(TFT_CS, TFT_DC, TFT_RST);
+#endif
+
+#ifdef USE_I2C
+  Adafruit_seesaw ss;
+#endif
 
 typedef uint16_t Color;
 typedef void (*FunctionCall)();
@@ -173,160 +197,187 @@ const struct MenuGroup menuGroups[6] = {
   { 0,"Home",{{"Media",1},{"Information",2},{"Sensors",3},{"Turbo encabulator",4},{"Settings",5}},5,TOS_ORANGE,TOS_LIMEGREEN,BLACK,BLACK },
   { 1,"Media",{{"Back",0},{"Audio",0,openAudioScreen},{"Images",0,drawLogoBitmap},{"Video",0,openVideoScreen},{"Reader",0,openReaderScreen}},5,TOS_LIMEGREEN,GREEN,BLACK,BLACK },
   { 2,"Information",{{"Back",0},{"Lookup",0},{"Download",0},{"Upload",0}},4,CYAN,TOS_SLATEBLUE,BLACK,WHITE },
-  { 3,"Sensors",{{"Back",0},{"Perimeter",0},{"Environmental",0}},3,TOS_ORANGE,RED,BLACK,WHITE },
+  { 3,"Sensors",{{"Back",0},{"Perimeter",0},{"Environmental",0,openBarChartTest}},3,TOS_ORANGE,RED,BLACK,WHITE },
   { 4,"Turbo encabulator",{{"Back",0},{"Unilateral Detractors",0},{"Synchronize Grammeter",0},{"HF Rem Peak Setting",0},{"Write-only Memory",0}},5,MAGENTA,TOS_SLATEBLUE,WHITE,WHITE },
   { 5,"Settings",{{"Back",0},{"Menu Item 42",0,drawLogoBitmap},{"Menu Item 43",0}},3,TOS_ORANGE,TOS_LIMEGREEN,BLACK,BLACK }
 };
 
-volatile byte activeMenuGroup=0;
-volatile byte activeMenuItem=0;
+volatile int8_t activeMenuGroup=0;
+volatile int8_t activeMenuItem=0;
 volatile bool needsRefresh=1;
 volatile bool onFunctionScreen=0;
 volatile int loopCount = 0;
-
 
 byte menuGroupCount = 5; //because sizeof is problematic
 
 int screenWidth;
 int screenHeight;
+uint8_t screenRotation = 3;
 
-byte switch1 = 7; 
-byte switch2 = 8; 
+byte switch1 = 9; 
+byte switch2 = 6; 
+byte switch3 = 5; 
+
+
 //byte encoder_ = 6; //orange
 //byte switch4 = 5; //blue
-byte leds[3] = {13,14,15};
+byte leds[3] = {A5,A4,A3};
 
 
-
-
-volatile int prevRotations = 0;
 volatile bool switch1State = 0;
 volatile bool switch2State = 0;
-volatile int rotations = 0;
+volatile bool switch3State = 0;
 volatile int lastMinutes = 0;
+uint8_t maxBright = 128;
+volatile uint8_t screenBright = 255;
+uint8_t speed=2;
+uint8_t totalLights= 3;
+volatile int32_t prevEncPosition = 0;
+volatile int8_t whichLight = 0;
 
 void setup() {
 
-  ImageReturnCode stat; // Status from image-reading functions
-  Serial.begin(115200);
+    ImageReturnCode stat; // Status from image-reading functions
+    Serial.begin(115200);
 
-  pinMode(switch1,INPUT_PULLUP);
-  pinMode(switch2,INPUT_PULLUP);
-  //pinMode(switch3,INPUT_PULLUP);
-  //pinMode(switch4,INPUT_PULLUP);
-  //pinMode(rotaryDt,INPUT);
-  //pinMode(rotaryClk,INPUT_PULLUP);
-  pinMode(leds[0],OUTPUT);
-  pinMode(leds[1],OUTPUT);
-  pinMode(leds[2],OUTPUT);
+    pinMode(switch1,INPUT);
+    pinMode(switch2,INPUT);
+    pinMode(switch3,INPUT);
+
+    pinMode(TFT_BL,OUTPUT);
+
+    pinMode(leds[0],OUTPUT);
+    pinMode(leds[1],OUTPUT);
+    pinMode(leds[2],OUTPUT);
 
 
 #ifdef HAS_RTC
-  RTC.begin();
-  //RTCTime startTime(dayInt, getMonthFromInt(monthInt), 2366, hourInt, minuteInt, 00, getDayOfWeekFromString(dayOfWeekStr), isDSTActive(isDSTActiveStr));
-  RTCTime startTime(7, Month::JULY, 2266, 8, 0, 0, DayOfWeek::THURSDAY, SaveLight::SAVING_TIME_ACTIVE);
- 
-  RTC.setTime(startTime);
+    RTC.begin();
+    //RTCTime startTime(dayInt, getMonthFromInt(monthInt), 2366, hourInt, minuteInt, 00, getDayOfWeekFromString(dayOfWeekStr), isDSTActive(isDSTActiveStr));
+    RTCTime startTime(7, Month::JULY, 2266, 8, 0, 0, DayOfWeek::THURSDAY, SaveLight::SAVING_TIME_ACTIVE);
+  
+    RTC.setTime(startTime);
 #endif
 
-  tft.begin();
-  tft.setRotation(1);
-  tft.setFont(&FreeSansBold12pt7b);
-  
+#ifdef USE_ILI9341
+    tft.begin();
+#endif
+
+#ifdef USE_ST7789
+    tft.init(240, 320);
+#endif
+
+    tft.setRotation(screenRotation);
+    tft.setFont(&FreeSansBold12pt7b);
+    
 
 #ifdef DEBUG
-  Serial.println("TC25 Operating System\nVer 20251108a");
-  delay(200);
+    while(!Serial);
+    Serial.println("TC25 Operating System\nVer 20251108a\nDEBUG MODE");
 #endif
-  while (!Serial) {
-  }
-  delay(1000);
-  screenWidth = tft.width();
-  screenHeight = tft.height();
-
-  tft.fillScreen(BLACK);
-  tft.setTextColor(YELLOW);
-  tft.setCursor(5, 17);
-  tft.println("TC25 Operating System");
-  tft.println("    Ver 20251108a");
-  tft.setTextColor(BLUE);
-  tft.println("  Turbo encabulator ");
-  tft.println("      Edition");
-  delay(2000);
-
-#ifdef USE_SD_CARD
-  if(!SD.begin(SD_CS)) { 
-    Serial.println(F("SD begin() failed"));
-    tft.fillScreen(BLACK);
-    tft.setFont(&FreeSansBold9pt7b);
-    tft.setCursor(1, 14);
-    tft.setTextColor(RED,BLACK);    
-    tft.println("SD begin() failed");
-    printSdErrorText(&Serial,SD.sdErrorCode());
-    printSdErrorText(&tft,SD.sdErrorCode());
+    analogWrite(TFT_BL, screenBright);
     delay(1000);
+    screenWidth = tft.width();
+    screenHeight = tft.height();
 
-    for(;;); // Fatal error, do not continue
-  }
-  Serial.println("SDCard initialization done.");
-  tft.println("SDCard initialization done.");
-#endif
-
-
-
-
-  delay(1000);
-  tft.fillScreen(BLACK);
-
-  for(int i = 0; i<11;i++) {
-    blinkyLights(i%3, 300);
-  }
-  // /pics/Tricorder Screen 1.bmp
-  // /pics/starfleet_TOS-2_black_bg.bmp
+    tft.fillScreen(BLACK);
+    tft.setTextColor(YELLOW);
+    tft.setCursor(5, 17);
+    tft.println("TC25 Operating System");
+    tft.println("    Ver 20251219a");
+    tft.setTextColor(BLUE);
+    tft.println("  Turbo encabulator ");
+    tft.println("      Edition");
+    delay(2000);
 
 #ifdef USE_SD_CARD
-  stat = reader.drawBMP("/pics/SF_TOS-1.bmp", tft, 0, 0);
+    if(!SD.begin(SD_CS)) { 
+        Serial.println(F("SD begin() failed"));
+        tft.fillScreen(BLACK);
+        tft.setFont(&FreeSansBold9pt7b);
+        tft.setCursor(1, 14);
+        tft.setTextColor(RED,BLACK);    
+        tft.println("SD begin() failed");
+        printSdErrorText(&Serial,SD.sdErrorCode());
+        printSdErrorText(&tft,SD.sdErrorCode());
+        delay(1000);
 
-  reader.printStatus(stat);   // How'd we do?
-  #ifdef DEBUG
-  switch (stat) {
-    case IMAGE_ERR_FILE_NOT_FOUND:
-      Serial.println("SF_TOS-1.bmp:Could not open the requested file");
-      break;
-    case IMAGE_ERR_FORMAT :
-      Serial.println("SF_TOS-1.bmp:Not a supported image format");
-      break;
-    case IMAGE_ERR_MALLOC :
-      Serial.println("SF_TOS-1.bmp:Could not allocate memory for operation");
-      break;
-    default:
-      Serial.println("SF_TOS-1.bmp:Image loaded successfully");
-  } 
-  #endif   
-
-      
+        for(;;); // Fatal error, do not continue
+    }
+    Serial.println("SDCard initialization done.");
+    tft.println("SDCard initialization done.");
 #endif
+
+#ifdef USE_I2C 
+    Serial.println("Looking for seesaw!");
+    if (! ss.begin(SEESAW_ADDR)) {
+        Serial.println("Couldn't find seesaw on default address");
+        while(1) delay(10);
+    }
+    Serial.println("seesaw started");
+
+#endif
+
+
+    delay(1000);
+    tft.fillScreen(BLACK);
+    delay(10);
+
+    for(byte i; i < totalLights; i++) {
+        fadeInLights(i, maxBright, speed);
+        fadeOutLights(i, maxBright, speed);
+    }
+
+    for(int i = 0; i<11;i++) {
+        blinkyLights(i%3, 255);
+    }
+    // /pics/Tricorder Screen 1.bmp
+    // /pics/starfleet_TOS-2_black_bg.bmp
+
+#ifdef USE_SD_CARD
+    stat = reader.drawBMP("/pics/SF_TOS-1.bmp", tft, 0, 0);
+
+    reader.printStatus(stat);   // How'd we do?
+    #ifdef DEBUG
+    switch (stat) {
+        case IMAGE_ERR_FILE_NOT_FOUND:
+            Serial.println("SF_TOS-1.bmp:Could not open the requested file");
+            break;
+        case IMAGE_ERR_FORMAT :
+            Serial.println("SF_TOS-1.bmp:Not a supported image format");
+            break;
+        case IMAGE_ERR_MALLOC :
+            Serial.println("SF_TOS-1.bmp:Could not allocate memory for operation");
+            break;
+        default:
+            Serial.println("SF_TOS-1.bmp:Image loaded successfully");
+    } 
+    #endif   
+
+#elifdef USE_BITMAP_ARRAY
+    drawLogoBitmap();
+#endif
+
 
 
 #ifdef USE_BITMAP_ARRAY
-  drawLogoBitmap();
+   drawLogoBitmap();
 #endif
 
 #ifdef DEBUG
-  Serial.println("Starting firmware");
-  Serial.print("screenWidth:");
-  Serial.println(screenWidth);
-  Serial.print("screenHeight:");
-  Serial.println(screenHeight);
-
-
+    Serial.println("Starting firmware");
+    Serial.print("screenWidth:");
+    Serial.println(screenWidth);
+    Serial.print("screenHeight:");
+    Serial.println(screenHeight);
 #endif
 
-  delay(2000);
-  // attachInterrupt(switch3, handleSwitch3, FALLING);
-  // attachInterrupt(switch4, handleSwitch4, FALLING);
-  attachInterrupt(switch1, handleSwitch1, FALLING);
-  attachInterrupt(switch2, handleSwitch2, FALLING);
+    delay(2000);
+    // attachInterrupt(switch3, handleSwitch3, FALLING);
+    // attachInterrupt(switch4, handleSwitch4, FALLING);
+    attachInterrupt(switch1, handleSwitch1, RISING);
+    attachInterrupt(switch2, handleSwitch2, RISING);
+    attachInterrupt(switch3, handleSwitch3, RISING);
 
 
 }
@@ -335,122 +386,151 @@ void loop() {
 #ifdef HAS_RTC  
     RTCTime currentTime;
     RTC.getTime(currentTime);
-  int minutes = currentTime.getMinutes() + (currentTime.getHour()*60);
-  if (lastMinutes != minutes) {
-    needsRefresh = HIGH;
-    lastMinutes = minutes;
-  }
+    int minutes = currentTime.getMinutes() + (currentTime.getHour()*60);
+    if (lastMinutes != minutes) {
+        needsRefresh = HIGH;
+        lastMinutes = minutes;
+    }
 #endif
+    byte prevWhichLight = whichLight;
+    int32_t newEncPosition = ss.getEncoderPosition();
     
-  if (prevRotations != rotations) {
-#ifdef DEBUG      
-    Serial.print("loop(): prevRotations: ");
-    Serial.print(prevRotations);
-    Serial.print("; rotations: ");
-    Serial.println(rotations);
-  //  delay(100);
+   
+    if (newEncPosition != prevEncPosition) {
+#ifdef DEBUG  
+        Serial.print("loop(): prevEncPosition: ");
+        Serial.print(prevEncPosition);
+        Serial.print("; newEncPosition: ");
+        Serial.print(newEncPosition);
+        Serial.print("; activeMenuItem: ");
+        Serial.println(activeMenuItem);
+    //  delay(100);
+#endif
+        if (newEncPosition > prevEncPosition) {    
+            //whichLight--;
+            activeMenuItem--;
+            //if (whichLight < 0) whichLight = totalLights-1; //it rolls over to 255
+            if (activeMenuItem < 0) 
+                activeMenuItem = menuGroups[activeMenuGroup].itemCount - 1;
+        }
+        else if (newEncPosition < prevEncPosition) {
+            //whichLight++;
+            activeMenuItem++;
+            //if (whichLight >= totalLights) whichLight = 0;
+            if (activeMenuItem >= menuGroups[activeMenuGroup].itemCount)  
+                activeMenuItem = 0;
+        }
+        needsRefresh=true;
+        prevEncPosition = newEncPosition; 
+
+        //fadeOutLights(prevWhichLight, maxBright, speed);
+        //fadeInLights(whichLight, maxBright, speed);
+        //prevWhichLight = whichLight;
+
+#ifdef DEBUG
+        Serial.print("loop(): ");
+        //Serial.print("; whichlight=");
+        //Serial.print(whichLight);
+        Serial.print("; activeMenuItem:");
+        Serial.println(activeMenuItem);
+#endif
+        delay(200);
+    
+
+    } //if (rotaryClkVal != rotaryClkLastVal && rotaryClkVal == 0)
+
+    if (switch2State == true) {
+        blinkyLights(1,300);
+#ifdef DEBUG
+        Serial.println("Switch 2");
+        Serial.print("loop(): ");
+        Serial.println(menuGroups[activeMenuGroup].menuItems[activeMenuItem].label);
 #endif
 
-    needsRefresh=true;
-    prevRotations = rotations; 
-    activeMenuItem = abs(rotations)%menuGroups[activeMenuGroup].itemCount;
-    Serial.print("loop(): ");
-    Serial.print("activeMenuItem:");
-    Serial.println(activeMenuItem);
-    delay(200);
-    
+        if (onFunctionScreen==true) {
+            onFunctionScreen = false;
+            needsRefresh=true;
+#ifdef DEBUG
+            Serial.print(" is selected. Leaving screen for MenuGroup ");
+            Serial.println(menuGroups[activeMenuGroup].menuItems[activeMenuItem].toMenuGroup);
+#endif
+        }
+        else if (menuGroups[activeMenuGroup].menuItems[activeMenuItem].toFunctionCall == nullptr ) {
+            activeMenuGroup = menuGroups[activeMenuGroup].menuItems[activeMenuItem].toMenuGroup;
+            activeMenuItem = 0;
+            needsRefresh=true;
+#ifdef DEBUG
+            Serial.print(" is selected. This calls MenuGroup ");
+            Serial.println(menuGroups[activeMenuGroup].menuItems[activeMenuItem].toMenuGroup);
+#endif
+        }
+        else {
+            menuGroups[activeMenuGroup].menuItems[activeMenuItem].toFunctionCall();
+            onFunctionScreen=true;
+            activeMenuItem = 0;
+            needsRefresh=false;
+#ifdef DEBUG
+            Serial.print(" is selected. This calls a screen ");
+#endif
+        }
 
-  } //if (rotaryClkVal != rotaryClkLastVal && rotaryClkVal == 0)
-
-  if (switch1State == true) {
-    switch1State = false;
-  
-#ifdef DEBUG    
-    Serial.print("loop(): ");
-    Serial.println(menuGroups[activeMenuGroup].menuItems[activeMenuItem].label);
-#endif 
-
-    if (onFunctionScreen==true) {
-      onFunctionScreen = false;
-      needsRefresh=true;
-#ifdef DEBUG  
-      Serial.print(" is selected. Leaving screen for MenuGroup ");
-      Serial.println(menuGroups[activeMenuGroup].menuItems[activeMenuItem].toMenuGroup);
-#endif 
-    }
-    else if (menuGroups[activeMenuGroup].menuItems[activeMenuItem].toFunctionCall == nullptr ) {
-      activeMenuGroup = menuGroups[activeMenuGroup].menuItems[activeMenuItem].toMenuGroup;
-      activeMenuItem = 0;
-      needsRefresh=true;
-#ifdef DEBUG  
-      Serial.print(" is selected. This calls MenuGroup ");
-      Serial.println(menuGroups[activeMenuGroup].menuItems[activeMenuItem].toMenuGroup);
-#endif 
-    }
-    else {
-      menuGroups[activeMenuGroup].menuItems[activeMenuItem].toFunctionCall();
-      onFunctionScreen=true;
-      activeMenuItem = 0;
-      needsRefresh=false;
-#ifdef DEBUG  
-      Serial.print(" is selected. This calls a screen ");
-#endif 
     }
 
-  }
+    if (switch1State == true) {
+        blinkyLights(0,300);
+        needsRefresh=true;  
+        if (activeMenuGroup > 0 && onFunctionScreen==false) 
+            activeMenuGroup--;
+        activeMenuItem = 0; //depends on first group being back button
+        onFunctionScreen=false;
 
-  if (switch2State == true) {
-    switch2State = false;
-    needsRefresh=true;  
-    if (activeMenuGroup > 0 && onFunctionScreen==false) 
-      activeMenuGroup--;
-    activeMenuItem = 0; //depends on first group being back button
-    onFunctionScreen=false;
+#ifdef DEBUG 
+        Serial.println("Switch 1");
+        Serial.print("loop(): ");
+        Serial.println("going back");
+#endif
+    }
 
-#ifdef DEBUG  
-    Serial.print("loop(): ");
-    Serial.println("going back");
-#endif 
-  }
+    if (switch3State == true) {
+        blinkyLights(2,300);
+        Serial.println("Switch 3");
+    }
 
-  
 
-  if (needsRefresh == true) {
+    if (needsRefresh == true) {
 #ifdef HAS_RTC
-    drawHeader(currentTime);
+        drawHeader(currentTime);
 #else
-    drawHeader();
+        drawHeader();
 #endif
-    drawMenu();
-    needsRefresh = false;
+        drawMenu();
+        needsRefresh = false;
 
 #ifdef DEBUG      
-    Serial.print("loop(): ");
-    Serial.println(menuGroups[activeMenuGroup].menuItems[activeMenuItem].label);
+        Serial.print("loop(): ");
+        Serial.println(menuGroups[activeMenuGroup].menuItems[activeMenuItem].label);
 #endif    
 
-  //  delay(100);
-  }
+        //delay(500);
+    }
+    switch1State = false;
+    switch2State = false;
+    switch3State = false;
 
 
 }
 
-void handleRotaryEncoder() {
-    rotations++;
-}
-// void handleSwitch3() {
-//     rotations++;
-// }
-// void handleSwitch4() {
-//     rotations--;
-// }
 
 void handleSwitch1() {
-  switch1State = true;
+    switch1State = true;
 }
 
 void handleSwitch2() {
-  switch2State = true;
+    switch2State = true;
+}
+
+void handleSwitch3() {
+    switch3State = true;
 }
 
 #ifdef HAS_RTC
@@ -467,7 +547,7 @@ void drawHeader(RTCTime currentTime) {
     Serial.println(starDate);
 
 #endif
-    tft.fillScreen(ILI9341_BLACK);
+    tft.fillScreen(BLACK);
     //yield();
     tft.setFont(&FreeSansBold9pt7b);
     tft.fillRoundRect(mx, my, wip, hip, hip/2, menuGroups[activeMenuGroup].inactiveColor);
@@ -490,7 +570,7 @@ void drawHeader() {
     int wip = screenWidth-20;
     int hip = screenHeight/10;
 
-    tft.fillScreen(ILI9341_BLACK);
+    tft.fillScreen(BLACK);
     //yield();
     tft.setFont(&FreeSansBold9pt7b);
     tft.fillRoundRect(mx, my, wip, hip, hip/2, menuGroups[activeMenuGroup].inactiveColor);
@@ -512,44 +592,44 @@ void drawMenu() {
     int my = hip+9;
 
 #ifdef DEBUG
-      //char buffer[100];
-      //sprintf(buffer,"activeMenuGroup: %d; menuItem: %d; mx: %d; my: %d; wip: %d; hip: %d",activeMenuGroup,i,mx,my,wip,hip );
-      //Serial.println(buffer);
-      Serial.print("drawMenu(): screenWidth:");
-      Serial.println(screenWidth);
-      Serial.print("drawMenu(): screenHeight:");
-      Serial.println(screenHeight);
-      Serial.print("drawMenu(): activeMenuGroup:");
-      Serial.print(activeMenuGroup);
-      Serial.print("; wip:");
-      Serial.print(wip);
-      Serial.print("; hip:");
-      Serial.println(hip);
+        //char buffer[100];
+        //sprintf(buffer,"activeMenuGroup: %d; menuItem: %d; mx: %d; my: %d; wip: %d; hip: %d",activeMenuGroup,i,mx,my,wip,hip );
+        //Serial.println(buffer);
+        Serial.print("drawMenu(): screenWidth:");
+        Serial.println(screenWidth);
+        Serial.print("drawMenu(): screenHeight:");
+        Serial.println(screenHeight);
+        Serial.print("drawMenu(): activeMenuGroup:");
+        Serial.print(activeMenuGroup);
+        Serial.print("; wip:");
+        Serial.print(wip);
+        Serial.print("; hip:");
+        Serial.println(hip);
 #endif
     mx += 10;
     wip -= 10;
     for ( int i = 0; i<menuGroups[activeMenuGroup].itemCount; i++ ) {
 
 #ifdef DEBUG
-      //char buffer[100];
-      //sprintf(buffer,"activeMenuGroup: %d; menuItem: %d; mx: %d; my: %d; wip: %d; hip: %d",activeMenuGroup,i,mx,my,wip,hip );
-      //Serial.println(buffer);
-      // Serial.print("screenWidth:");
-      // Serial.println(screenWidth);
-      // Serial.print("screenHeight:");
-      // Serial.println(screenHeight);
+        //char buffer[100];
+        //sprintf(buffer,"activeMenuGroup: %d; menuItem: %d; mx: %d; my: %d; wip: %d; hip: %d",activeMenuGroup,i,mx,my,wip,hip );
+        //Serial.println(buffer);
+        // Serial.print("screenWidth:");
+        // Serial.println(screenWidth);
+        // Serial.print("screenHeight:");
+        // Serial.println(screenHeight);
 
-      Serial.print("drawMenu(): menuItem:");
-      Serial.print(i);
-      Serial.print("; mx:");
-      Serial.print(mx);
-      Serial.print("; my:");
-      Serial.println(my);
+        Serial.print("drawMenu(): menuItem:");
+        Serial.print(i);
+        Serial.print("; mx:");
+        Serial.print(mx);
+        Serial.print("; my:");
+        Serial.println(my);
 #endif
 
-      drawMenuItem(mx, my, wip, hip, i);
-      //yield();
-      my = my + (hip+4);
+        drawMenuItem(mx, my, wip, hip, i);
+        //yield();
+        my = my + (hip+4);
 
     }
 
@@ -560,29 +640,29 @@ void drawMenu() {
 
 void drawMenuItem(int x, int y, int wip, int hip, byte menuItemId) {
   
-  uint16_t bgColor=menuGroups[activeMenuGroup].inactiveColor;
-  uint16_t fgColor=menuGroups[activeMenuGroup].inactiveTextColor;
-  tft.setFont(&FreeSans9pt7b);
+    uint16_t bgColor=menuGroups[activeMenuGroup].inactiveColor;
+    uint16_t fgColor=menuGroups[activeMenuGroup].inactiveTextColor;
+    tft.setFont(&FreeSans9pt7b);
 
 
 
-  if (menuItemId == activeMenuItem) {
-    bgColor=menuGroups[activeMenuGroup].activeColor;
-    fgColor=menuGroups[activeMenuGroup].activeTextColor;
-    tft.setFont(&FreeSansBold9pt7b);
+    if (menuItemId == activeMenuItem) {
+        bgColor=menuGroups[activeMenuGroup].activeColor;
+        fgColor=menuGroups[activeMenuGroup].activeTextColor;
+        tft.setFont(&FreeSansBold9pt7b);
 
-  }
-  
+    }
+    
 
-  tft.fillRoundRect(x, y, wip, hip, hip/2, bgColor);
-  yield();
-  tft.setCursor(x+10,y+(hip*.1)+14);
-  tft.setTextColor(fgColor,bgColor);
-  //tft.setTextSize(2);
-  tft.println(menuGroups[activeMenuGroup].menuItems[menuItemId].label);
-  yield();
+    tft.fillRoundRect(x, y, wip, hip, hip/2, bgColor);
+    yield();
+    tft.setCursor(x+10,y+(hip*.1)+14);
+    tft.setTextColor(fgColor,bgColor);
+    //tft.setTextSize(2);
+    tft.println(menuGroups[activeMenuGroup].menuItems[menuItemId].label);
+    yield();
 
-  //tft.color565(0, i, 0)
+    //tft.color565(0, i, 0)
 }
 
 
@@ -607,53 +687,53 @@ void printCenterJustifiedText(const char* text, u_int16_t cy, bool isBold, uint1
 
 void printPaginatedText(const char* text, uint16_t fgColor, uint16_t bgColor ) {
 
-  //int pageNumber = 0;
-  //int lastChar = 0;
-  int16_t x1, y1;
-  uint16_t w, h;
-  //int maxCharsPerScreen = 0;
-  int textLength = 0;
-  byte linesPerScreen =13;
-  //int avgCharWidth=0;
-  byte charsPerLine = 38;
-  bool stillReading = true;
-  
+    //int pageNumber = 0;
+    //int lastChar = 0;
+    int16_t x1, y1;
+    uint16_t w, h;
+    //int maxCharsPerScreen = 0;
+    int textLength = 0;
+    byte linesPerScreen =13;
+    //int avgCharWidth=0;
+    byte charsPerLine = 38;
+    bool stillReading = true;
+    
 
 
-  //for scrolling... 
-  /*
-    1. Determine text length (size HxW) for desired font.
-    2. breakup the text into lines
-    3. write only the lines that will fit based on scrol; cursor position
+    //for scrolling... 
+    /*
+      1. Determine text length (size HxW) for desired font.
+      2. breakup the text into lines
+      3. write only the lines that will fit based on scrol; cursor position
 
-    change of plans
-    WITH FreeSans9pt7b...
-    16 characters per line 
-    11 lines per screen.
-  */
+      change of plans
+      WITH FreeSans9pt7b...
+      16 characters per line 
+      11 lines per screen.
+    */
 
-  tft.fillScreen(bgColor);
-  tft.setTextColor(fgColor,bgColor);
-  //                                xAdv   yAdv
-  //tft.setFont(&FreeSans9pt7b); // 5-18     22   7
-  tft.setFont(&FreeMono9pt7b); //   11     18   11
- // tft.setFont(&FreeSerif9pt7b); // 5-17     22    7
-  textLength = strlen(text);
-  //tft.getTextBounds("the quick, brown fox jumped over the lazy dog. THE QUICK, BROWN FOX JUMPED OVER THE LAZY DOG!", 0, 0, &x1, &y1, &w, &h);
+    tft.fillScreen(bgColor);
+    tft.setTextColor(fgColor,bgColor);
+    //                                xAdv   yAdv
+    //tft.setFont(&FreeSans9pt7b); // 5-18     22   7
+    tft.setFont(&FreeMono9pt7b); //   11     18   11
+  // tft.setFont(&FreeSerif9pt7b); // 5-17     22    7
+    textLength = strlen(text);
+    //tft.getTextBounds("the quick, brown fox jumped over the lazy dog. THE QUICK, BROWN FOX JUMPED OVER THE LAZY DOG!", 0, 0, &x1, &y1, &w, &h);
 
-  charsPerLine = screenWidth/11;
- //charsPerLine = 40;
+    charsPerLine = screenWidth/11;
+  //charsPerLine = 40;
 
 
 
-  // maxCharsPerScreen = linesPerScreen * charsPerLine;
+    // maxCharsPerScreen = linesPerScreen * charsPerLine;
 
-  //setup the text for proper formatting...
-  int i=0,j=0,ch=0,lastSpaceInLine=0,lineCount=0,estTotalLines=((textLength/charsPerLine)*1.5)+3, chOffset = 0;
-  //char lineBuffer[charsPerLine+1];
-  char formattedText[estTotalLines][charsPerLine+1];
+    //setup the text for proper formatting...
+    int i=0,j=0,ch=0,lastSpaceInLine=0,lineCount=0,estTotalLines=((textLength/charsPerLine)*1.5)+3, chOffset = 0;
+    //char lineBuffer[charsPerLine+1];
+    char formattedText[estTotalLines][charsPerLine+1];
 
-  #ifdef DEBUG
+#ifdef DEBUG
     Serial.print(" linesPerScreen: ");
     Serial.print(linesPerScreen);
     // Serial.print(" test text width: ");
@@ -666,157 +746,161 @@ void printPaginatedText(const char* text, uint16_t fgColor, uint16_t bgColor ) {
     Serial.print(textLength);
     Serial.print("; estTotalLines: ");
     Serial.println(estTotalLines);
-  #endif
-
-  for (lineCount = 0; lineCount < estTotalLines && ch < textLength; lineCount++) {
-      constantLights(0,1);
-
-    for (i=0; i < charsPerLine && ch < textLength; i++) {
-      constantLights(1,1);
-
-      formattedText[lineCount][i] = text[ch];
-      // if (text[ch] == ' ' || text[ch]  == '.' || text[ch]  == ',' || text[ch]  == ';' 
-      //   || text[ch]  == ':' || text[ch]  == '!' || text[ch]  == '\n' || text[ch]  == '?')
-      //   lastSpaceInLine = i;
-      if (text[ch] == ' ' || text[ch]  == '\n' || text[ch]  == '-')
-        lastSpaceInLine = i;
-        ch++;
-    } //for (i=0; i < charsPerLine && ch < (textLength-1); i++)
-    constantLights(1,0);
-    constantLights(2,1);
-
-/*
-    scenarios                                                                     lastSpaceInLine                ch
-      1. We've transversed the whole line (i = 38), we are still ch<textLength, 
-         and there is a white space character before that but past 60% (23)       The last space encountered;    back to last white space.
-      2. We've hit the end of the text (ch >= textLength)                         i-1;                           no change
-      3. We've transversed the whole line (i = 38), we are still ch<textLength,   i-1;                           no change
-         there is either no whitespace before 60%, but there is whitespace the 
-         next character up.
-      4. We've transversed the whole line (i = 38), we are still ch<textLength,   i-1;                           no change
-         there is either no whitespace before 60%.
-*/
-    chOffset = 1;
-    if ((ch < textLength  
-       && (text[ch] == ' ' || text[ch]  == '\n' || text[ch]  == '-'))
-      || ch >= textLength ) {
-      lastSpaceInLine = i;  
-    //  chOffset = -1;
-#ifdef DEBUG
-      Serial.print("White Space or end of text."); 
-#endif
-    }
-#ifdef DEBUG
-      Serial.print("; ch before offset: ");
-      Serial.print(ch);
 #endif
 
-    if (lastSpaceInLine > 1 && ch < textLength) { 
-      ch -= (charsPerLine - lastSpaceInLine)-chOffset;
+    for (lineCount = 0; lineCount < estTotalLines && ch < textLength; lineCount++) {
+        constantLights(0,1);
+
+        for (i=0; i < charsPerLine && ch < textLength; i++) {
+            constantLights(1,1);
+
+            formattedText[lineCount][i] = text[ch];
+            // if (text[ch] == ' ' || text[ch]  == '.' || text[ch]  == ',' || text[ch]  == ';' 
+            //   || text[ch]  == ':' || text[ch]  == '!' || text[ch]  == '\n' || text[ch]  == '?')
+            //   lastSpaceInLine = i;
+            if (text[ch] == ' ' || text[ch]  == '\n' || text[ch]  == '-')
+              lastSpaceInLine = i;
+              ch++;
+        } //for (i=0; i < charsPerLine && ch < (textLength-1); i++)
+        constantLights(1,0);
+        constantLights(2,1);
+
+  /*
+      scenarios                                                                     lastSpaceInLine                ch
+        1. We've transversed the whole line (i = 38), we are still ch<textLength, 
+          and there is a white space character before that but past 60% (23)       The last space encountered;    back to last white space.
+        2. We've hit the end of the text (ch >= textLength)                         i-1;                           no change
+        3. We've transversed the whole line (i = 38), we are still ch<textLength,   i-1;                           no change
+          there is either no whitespace before 60%, but there is whitespace the 
+          next character up.
+        4. We've transversed the whole line (i = 38), we are still ch<textLength,   i-1;                           no change
+          there is either no whitespace before 60%.
+  */
+        chOffset = 1;
+        if ((ch < textLength  
+        && (text[ch] == ' ' || text[ch]  == '\n' || text[ch]  == '-'))
+        || ch >= textLength ) {
+            lastSpaceInLine = i;  
+        //  chOffset = -1;
+#ifdef DEBUG
+                Serial.print("White Space or end of text."); 
+#endif
+        }
+#ifdef DEBUG
+              Serial.print("; ch before offset: ");
+              Serial.print(ch);
+#endif
+
+        if (lastSpaceInLine > 1 && ch < textLength) { 
+          ch -= (charsPerLine - lastSpaceInLine)-chOffset;
+        }
+
+#ifdef DEBUG
+            Serial.print("; lastSpaceInLine: ");
+            Serial.print(lastSpaceInLine);
+            Serial.print("; chOffset:" ); 
+            Serial.print(chOffset); 
+            Serial.print("; ch: ");
+            Serial.println(ch);
+#endif
+
+        formattedText[lineCount][lastSpaceInLine] = '\0';
       
-    }
-
+    //    strncpy(formattedText[lineCount++],lineBuffer,lastSpaceInLine+1);
+          //formattedText[lineCount++] = lineBuffer;
 #ifdef DEBUG
-      Serial.print("; lastSpaceInLine: ");
-      Serial.print(lastSpaceInLine);
-      Serial.print("; chOffset:" ); 
-      Serial.print(chOffset); 
-      Serial.print("; ch: ");
-      Serial.println(ch);
+            Serial.print("; formattedText[");
+            Serial.print(lineCount);
+            Serial.print("]: \"");
+            Serial.print(formattedText[lineCount]);
+            Serial.println("\"");
 #endif
+        constantLights(2,0);
+        constantLights(0,0);
 
-    formattedText[lineCount][lastSpaceInLine] = '\0';
-    
-//    strncpy(formattedText[lineCount++],lineBuffer,lastSpaceInLine+1);
-      //formattedText[lineCount++] = lineBuffer;
-#ifdef DEBUG
-      Serial.print("; formattedText[");
-      Serial.print(lineCount);
-      Serial.print("]: \"");
-      Serial.print(formattedText[lineCount]);
-      Serial.println("\"");
-#endif
-    constantLights(2,0);
-    constantLights(0,0);
-
-    lastSpaceInLine = 0;
-  } //for (int ch=0; ch<textLength; ch++) {
+        lastSpaceInLine = 0;
+    } //for (int ch=0; ch<textLength; ch++) {
 
   //char sectionBuffer[maxCharsPerScreen];
-  switch1State=HIGH;
-  switch2State=LOW;
-  lastSpaceInLine = 0; //reusing this. It's now the last line printed
-  tft.setRotation(1);
+    switch1State=HIGH;
+    switch2State=LOW;
+    switch3State=LOW;
+    lastSpaceInLine = 0; //reusing this. It's now the last line printed
+    tft.setRotation(screenRotation);
 //  byte lightIdx = 0;
 #ifdef DEBUG
-      Serial.print("; lineCount");
-      Serial.println(lineCount);
+    Serial.print("; lineCount");
+    Serial.println(lineCount);
 #endif
-  while (stillReading) {
-    constantLights(0,1);
+    while (stillReading) {
+        constantLights(0,1);
 
-    if (switch1State == HIGH) {
-      constantLights(1,1);
-      if (lastSpaceInLine < lineCount) {
-        tft.fillScreen(bgColor);
-        tft.setCursor(1,14);
-        tft.setTextColor(fgColor,bgColor);
-#ifdef DEBUG
-        Serial.print("Turning the page forward: ");
-        Serial.println(lastSpaceInLine);        
-#endif
-        for (i=0;lastSpaceInLine+i<lineCount && i<linesPerScreen; i++ ) {
-          tft.println(formattedText[lastSpaceInLine+i]);
-#ifdef DEBUG
-          Serial.print("formattedText[");
-          Serial.print(lastSpaceInLine+i);
-          Serial.print("] = \"");
-          Serial.print(formattedText[lastSpaceInLine+i]);
-          Serial.println("\"");
-#endif
-        }
-        lastSpaceInLine = i;
+        if (switch1State == HIGH) {
+            constantLights(1,1);
+            if (lastSpaceInLine < lineCount) {
+                tft.fillScreen(bgColor);
+                tft.setCursor(1,14);
+                tft.setTextColor(fgColor,bgColor);
+    #ifdef DEBUG
+              Serial.print("Turning the page forward: ");
+              Serial.println(lastSpaceInLine);        
+    #endif
+              for (i=0;lastSpaceInLine+i<lineCount && i<linesPerScreen; i++ ) {
+                  tft.println(formattedText[lastSpaceInLine+i]);
+    #ifdef DEBUG
+                  Serial.print("formattedText[");
+                  Serial.print(lastSpaceInLine+i);
+                  Serial.print("] = \"");
+                  Serial.print(formattedText[lastSpaceInLine+i]);
+                  Serial.println("\"");
+    #endif
+              }
+              lastSpaceInLine = i;
 
-      }
-      constantLights(1,0);
-      switch1State=LOW;
-    } //if (switch1State == HIGH)
-    else if (switch2State == HIGH) {
-      constantLights(2,1);
-      if (lastSpaceInLine > linesPerScreen) {
-        tft.fillScreen(bgColor);
-        tft.setCursor(1,14);
-        tft.setTextColor(fgColor,bgColor);    
-        lastSpaceInLine -= linesPerScreen;   
-#ifdef DEBUG
-        Serial.print("Turning the page backward: ");
-        Serial.println(lastSpaceInLine);        
-#endif        
-        for (i=0;lastSpaceInLine+i<lineCount && i<linesPerScreen; i++ ) {
-          tft.println(formattedText[lastSpaceInLine+i]);
-#ifdef DEBUG
-          Serial.print("formattedText[");
-          Serial.print(lastSpaceInLine+i);
-          Serial.print("] = \"");
-          Serial.print(formattedText[lastSpaceInLine+i]);
-          Serial.println("\"");
-#endif
-        }
-        lastSpaceInLine = i;
-      }
-      else {
-        stillReading = false;
-      }
-      switch2State=LOW;
-      constantLights(2,0);
-    } // else if (switch2State == HIGH) 
-    delay(10);
-  } //while (stillReading)
-  constantLights(0,0);
-  constantLights(1,0);
-  constantLights(2,0);
-  onFunctionScreen=false;
-  needsRefresh = true;
+            }
+            constantLights(1,0);
+            switch1State=LOW;
+        } //if (switch1State == HIGH)
+        else if (switch2State == HIGH) {
+            constantLights(2,1);
+            if (lastSpaceInLine > linesPerScreen) {
+                tft.fillScreen(bgColor);
+                tft.setCursor(1,14);
+                tft.setTextColor(fgColor,bgColor);    
+                lastSpaceInLine -= linesPerScreen;   
+      #ifdef DEBUG
+                Serial.print("Turning the page backward: ");
+                Serial.println(lastSpaceInLine);        
+      #endif        
+                for (i=0;lastSpaceInLine+i<lineCount && i<linesPerScreen; i++ ) {
+                    tft.println(formattedText[lastSpaceInLine+i]);
+      #ifdef DEBUG
+                    Serial.print("formattedText[");
+                    Serial.print(lastSpaceInLine+i);
+                    Serial.print("] = \"");
+                    Serial.print(formattedText[lastSpaceInLine+i]);
+                    Serial.println("\"");
+      #endif
+                }
+                lastSpaceInLine = i;
+            }
+            else {
+                stillReading = false;
+            }
+            switch2State=LOW;
+            constantLights(2,0);
+        } // else if (switch2State == HIGH) 
+        else if (switch3State == HIGH) {
+            constantLights(2,1);
+            switch3State=LOW;
+            constantLights(2,0);
+        } // else if (switch3State == HIGH)     delay(10);
+    } //while (stillReading)
+    constantLights(0,0);
+    constantLights(1,0);
+    constantLights(2,0);
+    onFunctionScreen=false;
+    needsRefresh = true;
 }
 
 
@@ -885,16 +969,43 @@ float StardateConverter(RTCTime currentTime, int yearOffset) {
 }
 #endif
 
-void constantLights(byte idx,byte state) {
-    digitalWrite(leds[idx], state);
+void constantLights(int8_t idx,byte state) {
+    if (state == 1)
+        analogWrite(leds[idx], maxBright);
+    else 
+        analogWrite(leds[idx], 0);
+     
 }
 
-void blinkyLights(byte idx,int delayTime) {
-    digitalWrite(leds[idx], HIGH);
+void blinkyLights(int8_t idx,uint16_t delayTime) {
+    analogWrite(leds[idx], maxBright);
     delay(delayTime);
-    digitalWrite(leds[idx], LOW);
+    analogWrite(leds[idx], 0);
 //    yield();
 }
+
+
+void fadeInLights(int8_t idx, uint8_t brightness, uint16_t speed) {
+    for (uint8_t i=0; i < brightness; i++ ) {
+        //Serial.print(i);
+        //Serial.print(" ");
+        analogWrite(leds[idx], i);
+        delay(speed);
+    }
+    //Serial.println(brightness);
+}
+
+void fadeOutLights(int8_t idx, uint8_t brightness, uint16_t speed) {
+    for (uint8_t i=brightness; i > 0; i-- ) {
+        //Serial.print(i);
+        //Serial.print(" ");
+        analogWrite(leds[idx], i);
+        delay(speed);
+    }
+    //Serial.println(0);
+    analogWrite(leds[idx], 0);
+}
+
 
 #ifdef USE_BITMAP_ARRAY
 void drawLogoBitmap() {
@@ -903,7 +1014,7 @@ void drawLogoBitmap() {
 
 void drawLogoBitmap(uint32_t delayTime) {
 
-  tft.fillScreen(BLACK);
+    tft.fillScreen(BLACK);
 
 /*
 const unsigned uint8_t  starfleet_TOS_bright_red  #FF0000    0b11111 111 000000 00 00000 000
@@ -916,8 +1027,8 @@ const unsigned uint8_t  starfleet_TOS_white       #FFFFFF    0b11111 111 111111 
 const unsigned uint8_t  starfleet_TOS_yellow      #FFFF00    0b11111 111 111111 11 00000 000
 */
 
-  uint16_t x_offset = 0;
-  #ifdef USE_PROGMEM_FOR_BITMAP_ARRAY
+    uint16_t x_offset = 0;
+#ifdef USE_PROGMEM_FOR_BITMAP_ARRAY
     uint8_t bitmapArray[bmArraySize] ;
     memcpy_P(bitmapArray, starfleet_TOS_bright_red, bmArraySize);
     tft.drawBitmap(0, 0, bitmapArray, 320, 240, TOS_color_bright_red);
@@ -942,7 +1053,7 @@ const unsigned uint8_t  starfleet_TOS_yellow      #FFFF00    0b11111 111 111111 
 
     memcpy_P(bitmapArray, starfleet_TOS_yellow, bmArraySize);
     tft.drawBitmap(0, 0, bitmapArray, 320, 240, TOS_color_yellow);
-  #else 
+ #else 
     tft.drawBitmap(x_offset, 0, starfleet_TOS_bright_red, 320, 240, TOS_color_bright_red);
     tft.drawBitmap(x_offset, 0, starfleet_TOS_dark_blue, 320, 240, TOS_color_dark_blue);
     tft.drawBitmap(x_offset, 0, starfleet_TOS_dark_red, 320, 240, TOS_color_dark_red);
@@ -951,9 +1062,9 @@ const unsigned uint8_t  starfleet_TOS_yellow      #FFFF00    0b11111 111 111111 
     tft.drawBitmap(x_offset, 0, starfleet_TOS_mustard, 320, 240, TOS_color_mustard);
     tft.drawBitmap(x_offset, 0, starfleet_TOS_white, 320, 240, TOS_color_white);
     tft.drawBitmap(x_offset, 0, starfleet_TOS_yellow, 320, 240, TOS_color_yellow);
-  #endif
+#endif
 
-  delay(delayTime);
+    delay(delayTime);
 
 }
 #endif
@@ -961,23 +1072,27 @@ const unsigned uint8_t  starfleet_TOS_yellow      #FFFF00    0b11111 111 111111 
 // called functions
 
 void openAudioScreen() {
-  u_int16_t cy = screenHeight/2-14;
-  tft.fillScreen(menuGroups[activeMenuGroup].activeColor);
-  printCenterJustifiedText("Media - Audio", cy, true, menuGroups[activeMenuGroup].activeTextColor, menuGroups[activeMenuGroup].activeColor);
+    u_int16_t cy = screenHeight/2-14;
+    tft.fillScreen(menuGroups[activeMenuGroup].activeColor);
+    printCenterJustifiedText("Media - Audio", cy, true, menuGroups[activeMenuGroup].activeTextColor, menuGroups[activeMenuGroup].activeColor);
 }
 
 void openVideoScreen() {
-  u_int16_t cy = screenHeight/2-14;
-  tft.fillScreen(menuGroups[activeMenuGroup].activeColor);
-  printCenterJustifiedText("Media - Video", cy, true, menuGroups[activeMenuGroup].activeTextColor, menuGroups[activeMenuGroup].activeColor);
+    u_int16_t cy = screenHeight/2-14;
+    tft.fillScreen(menuGroups[activeMenuGroup].activeColor);
+    printCenterJustifiedText("Media - Video", cy, true, menuGroups[activeMenuGroup].activeTextColor, menuGroups[activeMenuGroup].activeColor);
 }
 
 void openReaderScreen() {
-  char text[] = "For a number of years work has been proceeding in order to bring perfection to the crudely conceived idea of a machine that would not only supply inverse reactive current for use in unilateral phase detractors, but would also be capable of automatically synchronizing cardinal grammeters.  Such a machine is the Turbo-Encabulator. Basically, the only new principle involved is that instead of power being generated by the relative motion of conductors and fluxes, it is produced by the modial interaction of magneto-reluctance and capacitive directance.";
-  //char text[] = "For a number of years work has been proceeding in order to bring perfection";
+    char text[] = "For a number of years work has been proceeding in order to bring perfection to the crudely conceived idea of a machine that would not only supply inverse reactive current for use in unilateral phase detractors, but would also be capable of automatically synchronizing cardinal grammeters.  Such a machine is the Turbo-Encabulator. Basically, the only new principle involved is that instead of power being generated by the relative motion of conductors and fluxes, it is produced by the modial interaction of magneto-reluctance and capacitive directance.";
+    //char text[] = "For a number of years work has been proceeding in order to bring perfection";
 
-//  printPaginatedText( text, BLACK, ILI9341_LIGHTGREY ) ;
-  printPaginatedText( text, ILI9341_DARKGREEN, BLACK ) ;
+    //  printPaginatedText( text, BLACK, ILI9341_LIGHTGREY ) ;
+    printPaginatedText( text, DARKGREEN, BLACK ) ;
 }
 
 
+void openBarChartTest() {
+    Chart testChart = setChartTestData();
+    drawBarGraph(tft, testChart, BLACK, TOS_color_dark_red, TOS_color_yellow);
+}
